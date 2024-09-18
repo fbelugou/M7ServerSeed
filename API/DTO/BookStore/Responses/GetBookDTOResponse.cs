@@ -11,4 +11,13 @@ public class GetBookDTOResponse
 
     public string ISBN { get; set; }
 
+    public override bool Equals(object? obj)
+    {
+        return obj is GetBookDTOResponse response &&
+               Id == response.Id &&
+               Title == response.Title &&
+               Description == response.Description &&
+               ISBN == response.ISBN;
+    }
 }
+
