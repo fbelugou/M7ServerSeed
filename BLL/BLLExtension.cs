@@ -1,9 +1,10 @@
 ﻿using BLL.Services.Implementations;
 using BLL.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("TestsUnitaires")]
 namespace BLL;
-
 public class BLLOptions
 {    
     //Here you can add your custom options
