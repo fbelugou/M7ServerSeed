@@ -20,7 +20,7 @@ public static class BLLExtension
 
         //Here you can add your BLL services
         services.AddTransient<IBookStoreService, BookStoreService>();
-
+        services.AddTransient<IAccountService, AccountService>();
         return services;
     }
 }

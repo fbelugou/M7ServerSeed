@@ -5,9 +5,11 @@ using Domain.Entities;
 using Domain.Exceptions;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
+
 
 public class BookStoreController : APIBaseController
 {
@@ -27,6 +29,7 @@ public class BookStoreController : APIBaseController
     // 3. Return the good ResponseDTO to the client application (Exception, Result, etc.)
 
     [Route("books")]
+    [Authorize(Roles = "ADMIN" )]
     [HttpGet]
     public async Task<IActionResult> GetAllBooks()
     {

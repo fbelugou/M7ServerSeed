@@ -2,7 +2,11 @@ using BLL;
 using DAL;
 using FluentValidation;
 using M7BookAPI.Filters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Controllers in IOC.
 builder.Services.AddControllers(options =>
 {
+#if !DEBUG
     options.Filters.Add(typeof(ApiExceptionFilterAttribute));
+#endif
 });
 
 
@@ -38,6 +44,24 @@ builder.Services.AddDAL((options) => {
 
 });
 
+
+//JWT Authentification
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(option => {
+        option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidIssuer = builder.Configuration["JWTIssuer"],
+            ValidAudience = builder.Configuration["JWTAudience"],
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSecret"])),
+            ClockSkew = TimeSpan.Zero
+            
+        };
+
+    });
 
 //DOCUMENTATION SERVICES <= Next in the course
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -70,9 +94,10 @@ if (app.Environment.IsDevelopment())
 
 //We don't need this line because we don't have any HTTPS certificate
 //app.UseHttpsRedirection();
+app.UseAuthentication();
 
 //Later we will add the Authorization and Authentification in the API
-//app.UseAuthorization();
+app.UseAuthorization();
 
 //Add middleware to handle the request
 app.MapControllers();
