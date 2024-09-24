@@ -59,36 +59,34 @@ internal class AccountService : IAccountService
     //retour : token jwt
     private string GenerateToken(User user)
     {
-        // Add claims
+        // Add User Infos
         var claims = new Dictionary<string, object>() {
             [JwtRegisteredClaimNames.Sub] = user.Id.ToString(),
             [ClaimTypes.NameIdentifier] = user.Id.ToString(),
             [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString(),
         
-            //AddRole
+            //Add Roles
             [ClaimTypes.Role] = user.Roles
          };
 
-
-        //Sign secret key
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTSecret"]));
+        //Signing Key
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetValue<string>("JWTSecret")));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        //Expiration
-        var expires = DateTime.Now.AddSeconds(3600);
+        //Expiration time
+        var expires = DateTime.Now.AddSeconds(_configuration.GetValue<int>("JWTExpireTokenInSeconds"));
 
-        //Create JWT
+        //Create JWT Token Object
         var token = new SecurityTokenDescriptor()
         {
-            Issuer = _configuration["JWTIssuer"],
-            Audience = _configuration["JWTAudience"],
+            Issuer = _configuration.GetValue<string>("JWTIssuer"),
+            Audience = _configuration.GetValue<string>("JWTAudience"),
             Claims = claims,
             Expires = expires,
             SigningCredentials= creds
         };
 
-        //Token JWT c# -> string
+        //Serializes a JwtSecurityToken into a JWT in Compact Serialization Format.
         return new JsonWebTokenHandler().CreateToken(token);
-
     }
 }

@@ -53,10 +53,10 @@ builder.Services
         {
             ValidateIssuer = false,
             ValidateAudience = false,
-            ValidIssuer = builder.Configuration["JWTIssuer"],
-            ValidAudience = builder.Configuration["JWTAudience"],
+            ValidIssuer = builder.Configuration.GetValue<string>("JWTIssuer"),
+            ValidAudience = builder.Configuration.GetValue<string>("JWTAudience"),
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSecret"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JWTSecret"))),
             ClockSkew = TimeSpan.Zero
             
         };
