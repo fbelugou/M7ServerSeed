@@ -29,13 +29,16 @@ public class BookStoreControllerTests : AbstractIntegrationTest
         };
 
         int idBook = expected.Id;
+        await LogIn("admin", "admin");
         //Act
-        
         GetBookDTOResponse? result = await _client.GetFromJsonAsync<GetBookDTOResponse>($"/api/bookStore/books/{idBook}");
-        
+
+        //Clean 
+        LogOut();
 
         //Assert
         Assert.Equal(expected, result);
+
     }
 
 

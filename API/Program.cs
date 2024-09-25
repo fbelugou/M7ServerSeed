@@ -3,10 +3,11 @@ using DAL;
 using FluentValidation;
 using M7BookAPI.Filters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,10 +35,11 @@ builder.Services.AddControllers(options =>
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 //ADD the BLL in the IOC
-builder.Services.AddBLL( (options) => {});
+builder.Services.AddBLL((options) => { });
 
 //ADD the DAL in the IOC
-builder.Services.AddDAL((options) => {
+builder.Services.AddDAL((options) =>
+{
     options.DBConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     Enum.TryParse(builder.Configuration.GetValue<string>("DBType"), out DBType dbType);
     options.DBType = dbType;
@@ -48,7 +50,8 @@ builder.Services.AddDAL((options) => {
 //JWT Authentification
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(option => {
+    .AddJwtBearer(option =>
+    {
         option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
         {
             ValidateIssuer = false,
@@ -58,7 +61,7 @@ builder.Services
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JWTSecret"))),
             ClockSkew = TimeSpan.Zero
-            
+
         };
 
     });
@@ -67,11 +70,48 @@ builder.Services
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 //Add documentation to the API using Swagger and Swagger UI in IOC
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
- 
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "BookStoreAPI",
+        //Add infos document        
+    });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    options.IncludeXmlComments(xmlPath, true);
+
+    options.AddSecurityDefinition("jwt", new OpenApiSecurityScheme()
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Scheme = "Bearer",
+        In = ParameterLocation.Header,
+        Flows = new OpenApiOAuthFlows()
+        {
+            Password = new OpenApiOAuthFlow()
+            {
+                TokenUrl = new Uri("/api/account/swagger", UriKind.Relative)
+            }
+        }
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "jwt" }
+            },
+            new string[] {}
+        }
+    });
+
 });
 
+builder.Services.AddFluentValidationRulesToSwagger();
 
 
 var app = builder.Build();
@@ -105,4 +145,4 @@ app.MapControllers();
 // Run the application
 app.Run();
 
-public partial class  Program {}
+public partial class Program { }
